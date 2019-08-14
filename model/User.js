@@ -4,18 +4,19 @@ var Schema = mongoose.Schema;
 const userSchema = new Schema({
 
     name: {
-        type: String,
-        required: true
+        type: String
     },
     email: {
-        type: String,
-        required: true,
+        type: String
     },
     password: {
         type: String,
-        required: true,
         min: 6
     },
+    sellbooks: [{
+        type: Schema.ObjectId,
+        default: []
+    }],
     createdAt: {
         type: Date,
         default: Date.now

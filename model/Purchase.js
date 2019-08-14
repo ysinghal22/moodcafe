@@ -5,12 +5,12 @@ const purchaseSchema = new Schema({
 
     email: {
         type: String,
-        required: true,
+        ref: 'Users'
     },
-    booksId: {
+    booksId: [{
         type: Schema.ObjectId,
-        required: true,
-    }
+        default: []
+    }]
 })
 
 module.exports = mongoose.model('User', userSchema);

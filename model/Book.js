@@ -4,21 +4,23 @@ var Schema = mongoose.Schema;
 const bookSchema = new Schema({
 
     title: {
-        type: String,
-        required: true
+        type: String
     },
     description: {
-        type: String,
-        required: true,
+        type: String
     },
     price: {
-        type: String,
-        required: true,
+        type: String
     },
     quantity: {
         type: Number,
         default: 1
-    }
+    },
+    sellers: [{
+        type: Schema.ObjectId,
+        default: [],
+        ref: 'Users'
+    }]
 })
 
 module.exports = mongoose.model('Book', bookSchema);
