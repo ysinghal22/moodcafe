@@ -64,9 +64,7 @@ router.post('/login', async (req, res) => {
             email: userExist.email
         }, process.env.TOKEN_SECRET);
         res.header('auth-token', token).json(
-            {
-                token
-            }
+            {token}
         );
 
 })

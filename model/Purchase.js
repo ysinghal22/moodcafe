@@ -3,15 +3,21 @@ var Schema = mongoose.Schema;
 
 const purchaseSchema = new Schema({
 
-    email: {
-        type: String,
-        ref: 'Users',
-        trim: true
-    },
-    booksId: [{
+    purchasedBy: [{
+        email:{
+            type: String,
+            ref: 'Users',
+            trim: true
+        },
+        purchaseAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+    bookId: {
         type: Schema.ObjectId,
-        default: []
-    }]
+        ref: 'Book'
+    }
 })
 
 module.exports = mongoose.model('Purchase', purchaseSchema);
