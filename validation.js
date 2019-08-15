@@ -21,9 +21,10 @@ const addBookValidation = (data) => {
     const validateBook = {
         title: Joi.string().required(),
         description: Joi.string().required(),
-        price: Joi.Number().required(),
-        quantity: Joi.Number().required()
+        price: Joi.number().required(),
+        quantity: Joi.number().required()
     }
+    return Joi.validate(data, validateBook);
 }
 
 module.exports = {

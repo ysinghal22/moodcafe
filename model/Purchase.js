@@ -5,7 +5,8 @@ const purchaseSchema = new Schema({
 
     email: {
         type: String,
-        ref: 'Users'
+        ref: 'Users',
+        trim: true
     },
     booksId: [{
         type: Schema.ObjectId,
@@ -13,4 +14,4 @@ const purchaseSchema = new Schema({
     }]
 })
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('Purchase', purchaseSchema);
