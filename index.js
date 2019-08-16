@@ -8,6 +8,8 @@ const userRoutes = require('./model/UserRoutes');
 
 dotenv.config();
 
+var PORT = process.env.PORT ? process.env.PORT : 3000;
+
 //connect to database
 mongoose.connect(
     `${process.env.DB_CONNECT}`,
@@ -24,6 +26,6 @@ app.use(express.json());
 app.use('/moodcafe/', authRoute);
 app.use('/moodcafe/user', userRoutes);
 
-app.listen('3000', () => {
-    console.log("Server running on port 3000");
+app.listen(PORT, () => {
+    console.log("Server running on port ", PORT);
 })
