@@ -19,12 +19,13 @@ const bookSchema = new Schema({
     quantity: {
         type: Number,
         default: 1
-    },
-    sellers: [{
-        type: Schema.ObjectId,
-        default: [],
-        ref: 'Users'
-    }]
+    }
+    //Can be used to keep record of book seller from which book store bought it
+    // ,sellers: [{
+    //     type: Schema.ObjectId,
+    //     default: [],
+    //     ref: 'Users'
+    // }]
 })
 
 module.exports = mongoose.model('Book', bookSchema);

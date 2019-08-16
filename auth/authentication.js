@@ -15,7 +15,7 @@ router.post('/register', async(req, res) => {
 
     //check if user already exists
     const userExist = await User.findOne({email:req.body.email});
-    if(userExist) return res.status(400).send("Alread registered with this email")
+    if(userExist) return res.send("Alread registered with this email")
 
     // pass password through bcrypt
     const salt = await bcrypt.genSalt(10);
@@ -29,8 +29,10 @@ router.post('/register', async(req, res) => {
     });
     try{
         const saveUser = await user.save()
+        console.log(saveUser)
         res.send(saveUser);
     } catch (err) {
+        console.log(err)
         res.status(400).send(err)
     }
     
@@ -63,6 +65,7 @@ router.post('/login', async (req, res) => {
             name: userExist.name,
             email: userExist.email
         }, process.env.TOKEN_SECRET);
+        console.log("User Logged In Email: ", req.body.email)
         res.header('auth-token', token).json(
             {token}
         );

@@ -4,6 +4,7 @@ var Schema = mongoose.Schema;
 const purchaseSchema = new Schema({
 
     purchasedBy: [{
+        _id : false,
         email:{
             type: String,
             ref: 'Users',
@@ -11,7 +12,8 @@ const purchaseSchema = new Schema({
         },
         purchaseAt: {
             type: Date,
-            default: Date.now
+            default: Date.now(),
+            // required: true
         }
     }],
     bookId: {

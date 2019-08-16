@@ -13,7 +13,12 @@ router.post('/addbook', verifyToken, async (req, res) => {
         return res.status(404).send(error.details[0].message);
     }
 
+    if(req.body.quantity<1){
+        console.log("message: Quantity must be greater than 0")
+        return res.status(404).send({message: "Quantity must be greater than 0"})
+    }
 
+    let responseToSend = []
     // Check if book already exists
     // if it exists increment the quantity of book and update price if changed
     // if it does not exists then create new document
@@ -31,13 +36,15 @@ router.post('/addbook', verifyToken, async (req, res) => {
 
         Book.findByIdAndUpdate(criteria, dataToUpdate, {new: true}, (err, data) => {
             if(err){
+                responseToSend.push(err); 
                 console.log(err)
-                return res.status(400).json({err})
+                return res.status(500).send(responseToSend)
             }
-            console.log("*****************------------>Updated Book\n",data);
-            res.json({
-                data
-            })
+            let response = data;
+            response.addedQuantity = req.body.quantity
+            responseToSend.push(response);
+            console.log(responseToSend);
+            res.send(responseToSend)
         });
     } else{
         const book = new Book({
@@ -48,11 +55,13 @@ router.post('/addbook', verifyToken, async (req, res) => {
         })
         try{
             let newBook = await book.save();
-            console.log("**************------>New Book created\n",newBook)
-            res.json(newBook);
+            responseToSend.push(newBook)
+            console.log(responseToSend)
+            res.send(responseToSend);
         }catch(err){
-            console.log(err)
-            return res.status(400).json({err});
+            responseToSend.push(err)
+            console.log(responseToSend)
+            return res.status(400).send(responseToSend);
         }
     }
     
@@ -64,62 +73,112 @@ router.get('/purchase/:bookName', verifyToken, async (req, res) => {
         return res.status(404).send("Please mention book title in req params");
     }
     const bookTitle = req.params.bookName.trim();
+    let responseToSend = []
     
-    // verify body
-    // const {error} = Validation.purchaseValidation(bookTitle);
-    // if(error){
-    //     console.log("*****************************inside Purchase");
-    //     return res.status(404).send(error.details[0].message);
-    // }
+    let bookInStock = await Book.findOne({title: bookTitle});
 
-    let bookExist = await Purchase.findOne({title: bookTitle});
-    // console.log(bookExist);
-    if(bookExist){
-        let criteria = {
-            _id: bookExist._id
-        };
-        let dataToUpdate = {
-            $addToSet:{ 
-                purchasedBy: {
-                    email: req.user.email
+    if(bookInStock && bookInStock.quantity>0){
+        let bookExist = await Purchase.findOne({bookId: bookInStock._id});
+        // console.log(bookExist);
+        if(bookExist){
+            let criteria = {
+                bookId: bookExist.bookId
+            };
+            let dataToUpdate = {
+                $push:{ 
+                    purchasedBy: {
+                        email: req.user.email
+                    }
                 }
-            },
-            bookId: bookExist._id
-        };
-
-        Book.findByIdAndUpdate(criteria, dataToUpdate, {new: true}, (err, data) => {
-            if(err){
-                console.log(err)
-                return res.status(400).json({err})
-            }
-            res.json({
-                bookId: bookExist._id,
-                email: req.user.email,
-                message: "Purchase detail stored"
+            };
+            Purchase.findOneAndUpdate(criteria, dataToUpdate,{new:true, useFindAndModify:false}, (err, doc) => {
+                if(err){
+                    responseToSend.push(err)
+                    console.log(responseToSend);
+                    res.status(500).send(responseToSend);
+                }
+                if(doc && doc.length>0){
+                    let purchaseDetail = {
+                        bookId: bookExist.bookId,
+                        email: req.user.email,
+                        message: "Purchase detail stored"
+                    };
+                    responseToSend.push(purchaseDetail);
+                    console.log("Book purchased /n",responseToSend)
+                    res.send(responseToSend);
+                }
+                responseToSend.push({message: "Book is not available"})
+                console.log(responseToSend);
+                res.status(500).send(responseToSend);
             })
-        });
-    } else{
-        const purchase = new Purchase({
-            $set:{purchasedBy: req.body.title},
-            bookId: req.body.description
-        })
-        try{
-            let newBook = await purchase.save();
-            res.json({
-                bookId: newBook._id,
-                email: req.user.email,
-                message: "Purchase detail stored"
-            });
-        }catch(err){
-            console.log(err)
-            return res.status(400).json({err});
+        } else{
+            let responseToSend = []
+            const purchasedBy = [];
+            purchasedBy.push({email: req.user.email})
+            let dataToSave = {
+                // $push:{ 
+                purchasedBy: purchasedBy,
+                bookId: bookInStock._id
+            }
+            const purchase = new Purchase(dataToSave)
+            try{
+                let newBook = await purchase.save();
+                let purchaseDetail = {
+                    bookId: newBook._id,
+                    email: req.user.email,
+                    message: "Purchase detail stored"
+                };
+                responseToSend.push(purchaseDetail)
+                console.log(purchaseDetail)
+                res.send(responseToSend);
+            }catch(err){
+                console.log(err)
+                return res.status(400).send(err);
+            }
         }
+
+    }
+});
+
+router.get('/sellbook/:bookName', (req, res) => {
+    if(!req.params.bookName){
+        return res.status(404).send("Please mention book title in req params");
+    }
+    const bookTitle = req.params.bookName.trim();
+    
+    let responseToSend = []
+    
+    let criteria = {
+        title: bookTitle
+    };
+    let dataToUpdate = {
+        $inc: {quantity: -1}
+    };
+    if(req.query.quantity){
+        dataToUpdate = {
+            $inc: {quantity: -1}
+        };
     }
 
-})
-
-router.post('/sellbook', (req, res) => {
-
+        Book.findOneAndUpdate(criteria, dataToUpdate, {useFindAndModify: false}, (err, doc)=>{
+            if(err){
+                responseToSend.push(err);
+                res.status(500).send(responseToSend);
+            }
+            if(doc && doc.length > 0 && doc.quantity>0){
+                let dataToSend = {
+                    title: doc.title,
+                    description: doc.description,
+                    price: doc.price
+                }
+                responseToSend.push(dataToSend)
+                console.log(doc);
+                res.send(responseToSend);
+            }
+            responseToSend.push({message: "Book is not available"})
+            console.log(responseToSend)
+            res.send(responseToSend)
+        })
 });
 
 module.exports = router;
