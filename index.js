@@ -10,8 +10,7 @@ dotenv.config();
 
 //connect to database
 mongoose.connect(
-    // process.env.DB_CONNECT,
-    "mongodb+srv://ysinghal22:nbsinghalnbyash1@cluster0-b0wd7.mongodb.net/test?retryWrites=true&w=majority",
+    `${process.env.DB_CONNECT}`,
     {useNewUrlParser: true},
     () => console.log("Connected to DB!")
 );
